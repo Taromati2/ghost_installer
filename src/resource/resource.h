@@ -4,8 +4,9 @@
 //
 #define IDSELECT						100
 #define IDC_PATHEDIT					101
+#define IDC_STATIC						101
 #define IDD_INSTALLATION_PATH_SELECTION 102
-#define IDR_GHOST_URL					72
+#define IDD_DOWNLOADING					103
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

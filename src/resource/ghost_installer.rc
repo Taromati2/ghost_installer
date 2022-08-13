@@ -5,35 +5,10 @@
 #include "resource.h"
 #include "windows.h"
 /////////////////////////////////////////////////////////////////////////////
-// 中文(简体，中国) resources
+// 非特定语言 resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\n"
-    "\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -41,8 +16,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -57,14 +32,14 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "TODO: <公司名>"
-            VALUE "FileDescription", "TODO: <文件说明>"
-            VALUE "FileVersion", "1.0.0.1"
-            VALUE "InternalName", "ghost_installer.rc"
+            VALUE "CompanyName", "E.tek"
+            VALUE "FileDescription", "Taromati2 Installer"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "ghost_installer"
             VALUE "LegalCopyright", "Copyright (C) 2022"
-            VALUE "OriginalFilename", "ghost_installer.rc"
-            VALUE "ProductName", "TODO: <产品名>"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "OriginalFilename", "ghost_installer.exe"
+            VALUE "ProductName", "Taromati2"
+            VALUE "ProductVersion", "1.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -90,6 +65,13 @@ BEGIN
     EDITTEXT        IDC_PATHEDIT,16,18,244,12,ES_AUTOHSCROLL
 END
 
+IDD_DOWNLOADING DIALOGEX 0, 0, 158, 52
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "所需文件下载中",IDC_STATIC,47,22,63,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -106,6 +88,14 @@ BEGIN
         TOPMARGIN, 4
         BOTTOMMARGIN, 53
     END
+
+    IDD_DOWNLOADING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 151
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 45
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -120,18 +110,21 @@ BEGIN
     0
 END
 
-#endif    // 中文(简体，中国) resources
-/////////////////////////////////////////////////////////////////////////////
+IDD_DOWNLOADING AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
 
 
-
-#ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
-// Generated from the TEXTINCLUDE 3 resource.
+// Icon
 //
 
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON                ICON                    "kikka.ico"
 
+#endif    // 非特定语言 resources
 /////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
 

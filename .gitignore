@@ -2,3 +2,4 @@
 .vs/
 ghost_installer.vcxproj.user
 src/resource/ghost_installer.aps
+src/resource/RC*
