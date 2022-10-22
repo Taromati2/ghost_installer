@@ -1,4 +1,4 @@
 cd Release
-upx --ultra-brute --no-align --best --compress-resources=1 ghost_installer.exe
-rename ghost_installer.exe Taromati2_Installer.exe
+strip ghost_installer.exe -s -x -X -M -o Taromati2_Installer.exe
+upx --ultra-brute --no-align --best --compress-resources=1 Taromati2_Installer.exe
 cd ..

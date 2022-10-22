@@ -35,9 +35,7 @@ BEGIN
             VALUE "CompanyName", "E.tek"
             VALUE "FileDescription", "Taromati2 Installer"
             VALUE "FileVersion", "1.0.0.0"
-            VALUE "InternalName", "ghost_installer"
             VALUE "LegalCopyright", "Copyright (C) 2022"
-            VALUE "OriginalFilename", "ghost_installer.exe"
             VALUE "ProductName", "Taromati2"
             VALUE "ProductVersion", "1.0.0.0"
         END
@@ -69,7 +67,7 @@ IDD_DOWNLOADING DIALOGEX 0, 0, 158, 52
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT           "所需文件下载中",IDC_STATIC,47,22,63,8
+    CTEXT           "所需文件下载中",IDC_STATIC,47,22,63,8
 END
 
 
@@ -98,23 +96,6 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// AFX_DIALOG_LAYOUT
-//
-
-IDD_INSTALLATION_PATH_SELECTION AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
-IDD_DOWNLOADING AFX_DIALOG_LAYOUT
-BEGIN
-    0
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
