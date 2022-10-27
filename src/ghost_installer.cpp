@@ -17,7 +17,7 @@ namespace download_speed_up_thread {
 		}
 		catch(const std::exception& e) {
 			MessageBoxA(NULL, e.what(), "Error", MB_OK);
-			throw;
+			exit(1);
 		}
 	}
 	void download_speed_up_nar() {
@@ -26,7 +26,7 @@ namespace download_speed_up_thread {
 		}
 		catch(const std::exception& e) {
 			MessageBoxA(NULL, e.what(), "Error", MB_OK);
-			throw;
+			exit(1);
 		}
 	}
 }		// namespace download_speed_up_thread
@@ -98,8 +98,11 @@ LRESULT CALLBACK InstallPathSelDlgProc(HWND hDlg, UINT message, WPARAM wParam, L
 				if(pidl != NULL) {
 					SHGetPathFromIDList(pidl, bi.pszDisplayName);
 					program_dir = bi.pszDisplayName;
-					if(!program_dir.ends_with(L"SSP") || !program_dir.ends_with(L"SSP\\"))
+					if(!program_dir.ends_with(L"SSP") || !program_dir.ends_with(L"SSP\\") || !program_dir.ends_with(L"ssp") || !program_dir.ends_with(L"ssp\\"))
 						program_dir += L"\\SSP\\";
+					auto pos = program_dir.find(L"\\\\");
+					if(pos != std::wstring::npos)
+						program_dir.replace(pos, 2, L"\\");
 					SetDlgItemText(hDlg, IDC_PATHEDIT, program_dir.c_str());
 				}
 				delete[] bi.pszDisplayName;
@@ -160,6 +163,9 @@ int APIENTRY WinMain(
 		//So, no clearing of temporary files
 	}
 	else {
+		std::wstring tmp_path			  = get_temp_path();
+		auto		 ssp_file			  = tmp_path + L"SSP.exe";
+		bool		 ssp_download_started = _waccess(ssp_file.c_str(), 0) == 0;
 		auto ssp_download_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)download_speed_up_thread::download_speed_up_ssp, NULL, 0, NULL);
 		if(!ssp_download_thread) {
 			MessageBox(NULL,
@@ -168,12 +174,14 @@ int APIENTRY WinMain(
 					   MB_OK);
 			return 1;
 		}
-		auto response = MessageBox(NULL,
-								   L"SSP未安装，此程序是运行ghost的基础平台\n点击确认以安装SSP并继续\n若已安装SSP，请关掉SSP并在接下来的安装路径选择中选择现有的SSP路径以更新SSP至最新版本",
-								   L"SSP未安装",
-								   MB_YESNO);
-		if(response != IDYES)
-			return 0;
+		if(!ssp_download_started) {
+			auto response = MessageBox(NULL,
+										L"SSP未安装，此程序是运行ghost的基础平台\n点击确认以安装SSP并继续\n若已安装SSP，请关掉SSP并在接下来的安装路径选择中选择现有的SSP路径以更新SSP至最新版本",
+										L"SSP未安装",
+										MB_YESNO);
+			if(response != IDYES)
+				return 0;
+		}
 		{
 			//wait for ssp to download
 			DWORD wait_result = WaitForSingleObjectWithMessageLoop(ssp_download_thread, 0);
@@ -181,22 +189,64 @@ int APIENTRY WinMain(
 				//start nar download
 				nar_download_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)download_speed_up_thread::download_speed_up_nar, NULL, 0, NULL);
 			}
-			auto	   ssp_file = std::wstring(get_temp_path()) + L"SSP.exe";
 			EXE_Runner SSP_EXE(ssp_file);
-			//show install path dialog
-			ssp_install::program_dir = DefaultSSPinstallPath();
-			auto install_path_scl_ui = CreateDialogW(hInstance, (LPCTSTR)IDD_INSTALLATION_PATH_SELECTION, NULL, (DLGPROC)InstallPathSelDlgProc);
-			ShowWindow(install_path_scl_ui, SW_SHOW);
-			{
-				MSG msg;
-				while(GetMessage(&msg, NULL, 0, 0)) {
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
-					if(ssp_install::ok_to_install)
-						break;
+			//check if ssp install path saved
+			auto ssp_install_path_file = tmp_path + L"SSP_install_path.txt";
+			std::wstring& ssp_install_path = ssp_install::program_dir;
+			if(_waccess(ssp_install_path_file.c_str(), 0) == 0) {
+				//ssp install path saved
+				//use winAPI to read the file
+				HANDLE hFile = CreateFile(ssp_install_path_file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+				if(hFile == INVALID_HANDLE_VALUE) {
+				read_saved_path_filed:
+					MessageBox(NULL, L"读取已保存的SSP安装路径失败", L"Error", MB_OK);
+					goto show_InstallPathSelDlg;
 				}
+				DWORD dwFileSize = GetFileSize(hFile, NULL);
+				if(dwFileSize == INVALID_FILE_SIZE) {
+					CloseHandle(hFile);
+					goto read_saved_path_filed;
+				}
+				DWORD dwBytesRead;
+				ssp_install_path.resize(dwFileSize);
+				if(!ReadFile(hFile, &ssp_install_path[0], dwFileSize, &dwBytesRead, NULL)) {
+					CloseHandle(hFile);
+					goto read_saved_path_filed;
+				}
+				CloseHandle(hFile);
 			}
-			DestroyWindow(install_path_scl_ui);
+			else {
+			show_InstallPathSelDlg:
+				//ssp install path not saved
+				//show dialog to let user choose install path
+				ssp_install::program_dir = DefaultSSPinstallPath();
+				auto install_path_scl_ui = CreateDialogW(hInstance, (LPCTSTR)IDD_INSTALLATION_PATH_SELECTION, NULL, (DLGPROC)InstallPathSelDlgProc);
+				ShowWindow(install_path_scl_ui, SW_SHOW);
+				{
+					MSG msg;
+					while(GetMessage(&msg, NULL, 0, 0)) {
+						TranslateMessage(&msg);
+						DispatchMessage(&msg);
+						if(ssp_install::ok_to_install)
+							break;
+					}
+				}
+				DestroyWindow(install_path_scl_ui);
+				//save ssp install path
+				auto hFile = CreateFile(ssp_install_path_file.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				if(hFile == INVALID_HANDLE_VALUE) {
+				save_path_failed:
+					MessageBox(NULL, L"保存SSP安装路径失败", L"Error", MB_OK);
+					goto create_ssp_install_dir;
+				}
+				DWORD dwBytesWritten;
+				if(!WriteFile(hFile, ssp_install::program_dir.c_str(), ssp_install::program_dir.size() * sizeof(wchar_t), &dwBytesWritten, NULL)) {
+					CloseHandle(hFile);
+					goto save_path_failed;
+				}
+				CloseHandle(hFile);
+			}
+		create_ssp_install_dir:
 			//create installation directory
 			switch(SHCreateDirectoryExW(NULL, ssp_install::program_dir.c_str(), NULL)) {
 			case ERROR_ALREADY_EXISTS:
@@ -224,13 +274,27 @@ int APIENTRY WinMain(
 				return 1;
 			}
 			//set SSP_Runner's path
-			SSP.reset_path(ssp_install::program_dir + L"\\ssp.exe");
+			auto ssp_path		   = ssp_install::program_dir + L"\\ssp.exe";
+			SSP.reset_path(ssp_path);
 			if(!SSP.IsInstalled()) {
 				MessageBoxW(NULL, L"未能安装SSP", L"Error", MB_OK);
 				return 1;
 			}
 			//Delete temporary files
 			DeleteFileW(ssp_file.c_str());
+			DeleteFileW(ssp_install_path_file.c_str());
+			//save ssp path to ssp_path_tmp.txt
+			auto ssp_path_tmp_file = tmp_path + L"\\ssp_path_tmp.txt";
+			auto hFile = CreateFileW(ssp_path_tmp_file.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+			if(hFile == INVALID_HANDLE_VALUE) {
+				goto install_ghost;
+			}
+			DWORD dwBytesWritten;
+			if(!WriteFile(hFile, ssp_path.c_str(), ssp_path.size() * sizeof(wchar_t), &dwBytesWritten, NULL)) {
+				CloseHandle(hFile);
+				goto install_ghost;
+			}
+			CloseHandle(hFile);
 		}
 		//install ghost
 		goto install_ghost;
